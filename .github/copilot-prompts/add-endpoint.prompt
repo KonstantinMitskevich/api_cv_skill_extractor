@@ -1,0 +1,109 @@
+# Add New Minimal API Endpoint
+
+Create a new endpoint in `Program.cs` following these requirements:
+
+## Endpoint Requirements
+1. Use minimal API syntax with route handler
+2. Choose appropriate HTTP method (GET, POST, PUT, DELETE)
+3. Accept appropriate parameters:
+   - `IFormFile` for file uploads
+   - Request DTO (record type) for JSON bodies
+   - Route parameters for resource identifiers
+   - Query parameters for filtering/pagination
+4. Apply `.DisableAntiforgery()` if accepting file uploads
+5. Validate all inputs before processing
+6. Return 400 Bad Request for invalid inputs with descriptive messages
+7. Use injected service from DI for business logic
+8. Return `TypedResults` with appropriate status codes
+9. Add OpenAPI documentation attributes
+
+## Template Structure
+```csharp
+/// <summary>
+/// Brief description of what the endpoint does.
+/// </summary>
+app.MapPost("/resource-name", async (Parameters parameters, IService service) =>
+{
+    // Validation
+    if (/* invalid input */)
+        return TypedResults.BadRequest(new { error = "Descriptive message" });
+    
+    // Business logic through service
+    var result = await service.ProcessAsync(parameters);
+    
+    // Return result
+    return TypedResults.Ok(result);
+})
+.DisableAntiforgery() // Only for file uploads
+.Produces<ResponseType>(200)
+.ProducesProblem(400)
+.ProducesProblem(500)
+.WithName("EndpointName")
+.WithOpenApi();
+```
+
+## File Upload Endpoint Template
+```csharp
+/// <summary>
+/// Uploads and processes a file.
+/// </summary>
+app.MapPost("/upload", async (IFormFile file, IService service) =>
+{
+    // Validate file
+    if (file is null or { Length: 0 })
+        return TypedResults.BadRequest(new { error = "No file uploaded" });
+    
+    if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+        return TypedResults.BadRequest(new { error = "Only PDF files are supported" });
+    
+    // Process file
+    var (result, error, statusCode) = service.ProcessFile(file);
+    
+    if (error != null)
+        return TypedResults.Problem(error, statusCode: statusCode);
+    
+    return TypedResults.Ok(new { result });
+})
+.DisableAntiforgery()
+.Produces<object>(200)
+.ProducesProblem(400)
+.ProducesProblem(500)
+.WithName("UploadFile")
+.WithOpenApi();
+```
+
+## JSON Endpoint Template
+```csharp
+public record CreateResourceRequest(string Name, string Description);
+public record ResourceResponse(int Id, string Name, string Description);
+
+/// <summary>
+/// Creates a new resource.
+/// </summary>
+app.MapPost("/resources", async (CreateResourceRequest request, IResourceService service) =>
+{
+    // Validate
+    if (string.IsNullOrWhiteSpace(request.Name))
+        return TypedResults.BadRequest(new { error = "Name is required" });
+    
+    // Create resource
+    var resource = await service.CreateAsync(request);
+    
+    return TypedResults.Created($"/resources/{resource.Id}", resource);
+})
+.Produces<ResourceResponse>(201)
+.ProducesProblem(400)
+.WithName("CreateResource")
+.WithOpenApi();
+```
+
+## Checklist
+- [ ] XML summary comment added
+- [ ] Input validation implemented
+- [ ] Service injected and called
+- [ ] TypedResults used for all return paths
+- [ ] Produces/ProducesProblem attributes added
+- [ ] WithName() for route naming
+- [ ] WithOpenApi() for Swagger
+- [ ] DisableAntiforgery() if file upload
+- [ ] Error handling with appropriate status codes

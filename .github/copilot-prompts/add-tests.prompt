@@ -1,0 +1,284 @@
+# Generate Unit Tests
+
+Create comprehensive unit tests for the current class or service using xUnit.
+
+## Test Requirements
+1. Test happy path scenarios (valid inputs, expected outputs)
+2. Test edge cases (null, empty, boundary conditions)
+3. Test error handling and exception scenarios
+4. Mock dependencies using NSubstitute
+5. Use descriptive test method names: `MethodName_Scenario_ExpectedBehavior`
+6. Follow Arrange-Act-Assert pattern
+7. Include [Theory] with [InlineData] for parameterized tests where appropriate
+
+## Test Class Template
+```csharp
+using Xunit;
+using NSubstitute;
+using Microsoft.AspNetCore.Http;
+
+namespace CV_extractor.Tests;
+
+public class <ClassName>Tests
+{
+    [Fact]
+    public void MethodName_ValidInput_ReturnsExpectedResult()
+    {
+        // Arrange
+        var service = new <ClassName>();
+        var input = CreateValidInput();
+        
+        // Act
+        var result = service.MethodName(input);
+        
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedValue, result.Property);
+    }
+    
+    [Fact]
+    public void MethodName_InvalidInput_ReturnsError()
+    {
+        // Arrange
+        var service = new <ClassName>();
+        var input = null;
+        
+        // Act
+        var (result, error, statusCode) = service.MethodName(input);
+        
+        // Assert
+        Assert.Null(result);
+        Assert.NotNull(error);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCode);
+    }
+    
+    [Theory]
+    [InlineData("value1", true)]
+    [InlineData("value2", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void MethodName_VariousInputs_ReturnsExpected(string input, bool expected)
+    {
+        // Arrange
+        var service = new <ClassName>();
+        
+        // Act
+        var result = service.MethodName(input);
+        
+        // Assert
+        Assert.Equal(expected, result);
+    }
+    
+    // Helper method for creating test data
+    private static InputType CreateValidInput()
+    {
+        return new InputType { Property = "value" };
+    }
+}
+```
+
+## Testing SkillExtractorService Example
+```csharp
+using Xunit;
+using Moq;
+using Microsoft.AspNetCore.Http;
+using System.Text;
+
+namespace CV_extractor.Tests;
+
+public class SkillExtractorServiceTests
+{
+    [Fact]
+    public void ExtractSkillsFromPdf_ValidPdfWithSkills_ReturnsSkillsList()
+    {
+        // Arrange
+        var service = new SkillExtractorService();
+        var pdfContent = "SKILLS:\nC#\nPython\nJavaScript\n\nEXPERIENCE:\nSoftware Engineer";
+        var mockFile = CreateMockPdfFile("test.pdf", pdfContent);
+        
+        // Act
+        var (skills, error, statusCode) = service.ExtractSkillsFromPdf(mockFile);
+        
+        // Assert
+        Assert.Null(error);
+        Assert.Equal(StatusCodes.Status200OK, statusCode);
+        Assert.Equal(3, skills.Count);
+        Assert.Contains("C#", skills);
+        Assert.Contains("Python", skills);
+        Assert.Contains("JavaScript", skills);
+    }
+    
+    [Fact]
+    public void ExtractSkillsFromPdf_NullFile_Returns400BadRequest()
+    {
+        // Arrange
+        var service = new SkillExtractorService();
+        
+        // Act
+        var (skills, error, statusCode) = service.ExtractSkillsFromPdf(null!);
+        
+        // Assert
+        Assert.Empty(skills);
+        Assert.Equal("No file uploaded.", error);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCode);
+    }
+    
+    [Fact]
+    public void ExtractSkillsFromPdf_EmptyFile_Returns400BadRequest()
+    {
+        // Arrange
+        var service = new SkillExtractorService();
+        var mockFile = CreateMockPdfFile("test.pdf", "", length: 0);
+        
+        // Act
+        var (skills, error, statusCode) = service.ExtractSkillsFromPdf(mockFile);
+        
+        // Assert
+        Assert.Empty(skills);
+        Assert.Equal("No file uploaded.", error);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCode);
+    }
+    
+    [Theory]
+    [InlineData("test.doc")]
+    [InlineData("test.txt")]
+    [InlineData("test.docx")]
+    [InlineData("test")]
+    public void ExtractSkillsFromPdf_NonPdfFile_Returns400BadRequest(string fileName)
+    {
+        // Arrange
+        var service = new SkillExtractorService();
+        var mockFile = CreateMockPdfFile(fileName, "content");
+        
+        // Act
+        var (skills, error, statusCode) = service.ExtractSkillsFromPdf(mockFile);
+        
+        // Assert
+        Assert.Empty(skills);
+        Assert.Equal("Only PDF files are supported.", error);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCode);
+    }
+    
+    [Fact]
+    public void ExtractSkillsFromPdf_NoSkillsSection_ReturnsEmptyList()
+    {
+        // Arrange
+        var service = new SkillExtractorService();
+        var pdfContent = "EXPERIENCE:\nSoftware Engineer\n\nEDUCATION:\nBachelor's Degree";
+        var mockFile = CreateMockPdfFile("test.pdf", pdfContent);
+        
+        // Act
+        var (skills, error, statusCode) = service.ExtractSkillsFromPdf(mockFile);
+        
+        // Assert
+        Assert.Empty(skills);
+        Assert.Equal("Skills section not found.", error);
+        Assert.Equal(StatusCodes.Status200OK, statusCode);
+    }
+    
+    [Fact]
+    public void ExtractSkillsFromPdf_SkillsWithVariousSeparators_ParsesCorrectly()
+    {
+        // Arrange
+        var service = new SkillExtractorService();
+        var pdfContent = "SKILLS:\nC#, Python; JavaScript\n• Java\n- Ruby\n\nEXPERIENCE:";
+        var mockFile = CreateMockPdfFile("test.pdf", pdfContent);
+        
+        // Act
+        var (skills, error, statusCode) = service.ExtractSkillsFromPdf(mockFile);
+        
+        // Assert
+        Assert.Null(error);
+        Assert.Equal(5, skills.Count);
+        Assert.Contains("C#", skills);
+        Assert.Contains("Python", skills);
+        Assert.Contains("JavaScript", skills);
+        Assert.Contains("Java", skills);
+        Assert.Contains("Ruby", skills);
+    }
+    
+    [Fact]
+    public void ExtractSkillsFromPdf_DuplicateSkills_ReturnsUniqueSkills()
+    {
+        // Arrange
+        var service = new SkillExtractorService();
+        var pdfContent = "SKILLS:\nC#\nc#\nC#\nPython\npython\n\nEXPERIENCE:";
+        var mockFile = CreateMockPdfFile("test.pdf", pdfContent);
+        
+        // Act
+        var (skills, error, statusCode) = service.ExtractSkillsFromPdf(mockFile);
+        
+        // Assert
+        Assert.Null(error);
+        Assert.Equal(2, skills.Count);
+        Assert.Contains("C#", skills, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("Python", skills, StringComparer.OrdinalIgnoreCase);
+    }
+    
+    // Helper method to create mock IFormFile
+    private static IFormFile CreateMockPdfFile(string fileName, string content, long? length = null)
+    {
+        var bytes = Encoding.UTF8.GetBytes(content);
+        var stream = new MemoryStream(bytes);
+        var mockFile = Substitute.For<IFormFile>();
+        
+        mockFile.FileName.Returns(fileName);
+        mockFile.Setup(f => f.Length).Returns(length ?? stream.Length);
+        mockFile.Setup(f => f.OpenReadStream()).Returns(stream);
+        mockFile.Setup(f => f.ContentType).Returns("application/pdf");
+        
+        return mockFile.Object;
+    }
+}
+```
+
+## Mock Patterns
+
+### Mocking IFormFile
+```csharp
+private static IFormFile CreateMockFile(string fileName, byte[] content)
+{
+    var stream = new MemoryStream(content);
+    var mock = new Mock<IFormFile>();
+    mock.Setup(f => f.FileName).Returns(fileName);
+    mock.Setup(f => f.Length).Returns(content.Length);
+    mock.Setup(f => f.OpenReadStream()).Returns(stream);
+    return mock.Object;
+}
+```
+
+### Mocking Services
+```csharp
+[Fact]
+public void Endpoint_ValidRequest_CallsService()
+{
+    // Arrange
+    var mockService = new Mock<ISkillExtractorService>();
+    mockService.Setup(s => s.ExtractSkills(It.IsAny<IFormFile>()))
+               .Returns((new List<string> { "C#" }, null, 200));
+    
+    // Act & Assert
+    mockService.Verify(s => s.ExtractSkills(It.IsAny<IFormFile>()), Times.Once);
+}
+```
+
+## Test Coverage Checklist
+- [ ] Happy path with valid inputs
+- [ ] Null input handling
+- [ ] Empty input handling
+- [ ] Invalid input validation
+- [ ] Boundary conditions
+- [ ] Exception handling
+- [ ] Edge cases specific to business logic
+- [ ] Duplicate data handling
+- [ ] Case sensitivity tests
+- [ ] Different separator formats
+
+## Best Practices
+- One assertion per test (or closely related assertions)
+- Use descriptive test method names
+- Keep tests simple and readable
+- Avoid test logic (if/else, loops)
+- Clean up resources (dispose mocks, streams)
+- Use constants for magic values
+- Group related tests in nested classes

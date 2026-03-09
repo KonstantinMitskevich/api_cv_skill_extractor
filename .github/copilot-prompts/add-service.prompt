@@ -1,0 +1,208 @@
+# Add New Service Class
+
+Create a service following SOLID principles with proper dependency injection.
+
+## Service Requirements
+1. Define interface `I<ServiceName>` with clear contract
+2. Implement in `<ServiceName>` class
+3. Inject dependencies via constructor (ILogger, IConfiguration, other services)
+4. Add XML documentation for public methods
+5. Handle errors appropriately (exceptions or error tuples)
+6. Register in `Program.cs` with appropriate lifetime
+7. Keep methods focused and small (Single Responsibility)
+
+## Service Template
+```csharp
+namespace CV_extractor;
+
+/// <summary>
+/// Interface for <ServiceName> defining the contract.
+/// </summary>
+public interface I<ServiceName>
+{
+    /// <summary>
+    /// Brief description of method.
+    /// </summary>
+    /// <param name="parameter">Parameter description</param>
+    /// <returns>Return value description</returns>
+    ReturnType MethodName(ParameterType parameter);
+}
+
+/// <summary>
+/// Implementation of I<ServiceName>.
+/// </summary>
+public class <ServiceName> : I<ServiceName>
+{
+    private readonly ILogger<<ServiceName>> _logger;
+    
+    public <ServiceName>(ILogger<<ServiceName>> logger)
+    {
+        _logger = logger;
+    }
+    
+    public ReturnType MethodName(ParameterType parameter)
+    {
+        // Implementation
+        _logger.LogInformation("Action performed");
+        return result;
+    }
+}
+```
+
+## Service with Error Tuple Pattern (like SkillExtractorService)
+```csharp
+namespace CV_extractor;
+
+public interface IDataProcessorService
+{
+    (ProcessedData? data, string? error, int statusCode) ProcessData(InputData input);
+}
+
+public class DataProcessorService : IDataProcessorService
+{
+    public (ProcessedData? data, string? error, int statusCode) ProcessData(InputData input)
+    {
+        // Validate input
+        if (!IsValidInput(input))
+            return (null, "Invalid input message", StatusCodes.Status400BadRequest);
+        
+        // Process with error handling
+        try
+        {
+            var data = PerformProcessing(input);
+            return (data, null, StatusCodes.Status200OK);
+        }
+        catch (Exception ex)
+        {
+            return (null, $"Processing failed: {ex.Message}", StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    private static bool IsValidInput(InputData input)
+    {
+        // Validation logic
+        return input != null;
+    }
+    
+    private static ProcessedData PerformProcessing(InputData input)
+    {
+        // Processing logic
+        return new ProcessedData();
+    }
+}
+```
+
+## Registration in Program.cs
+```csharp
+// Choose appropriate lifetime:
+
+// Scoped: Created once per request (default for most services)
+builder.Services.AddScoped<I<ServiceName>, <ServiceName>>();
+
+// Singleton: Created once for app lifetime (stateless, shared state)
+builder.Services.AddSingleton<I<ServiceName>, <ServiceName>>();
+
+// Transient: Created every time it's requested (lightweight, stateless)
+builder.Services.AddTransient<I<ServiceName>, <ServiceName>>();
+```
+
+## Service Lifetime Guidelines
+- **Scoped**: Use for services that need request-specific state or work with database contexts
+- **Singleton**: Use for stateless services, configuration readers, caching services
+- **Transient**: Use for lightweight services with no state, utility services
+
+## Method Organization
+```csharp
+public class WellOrganizedService : IWellOrganizedService
+{
+    // 1. Private fields
+    private readonly IDependency _dependency;
+    private const string SomeConstant = "value";
+    
+    // 2. Constructor
+    public WellOrganizedService(IDependency dependency)
+    {
+        _dependency = dependency;
+    }
+    
+    // 3. Public interface methods
+    public ReturnType PublicMethod(Parameters params)
+    {
+        return PrivateHelperMethod(params);
+    }
+    
+    // 4. Private instance methods
+    private ReturnType PrivateHelperMethod(Parameters params)
+    {
+        return StaticUtilityMethod(params);
+    }
+    
+    // 5. Private static methods (pure functions)
+    private static ReturnType StaticUtilityMethod(Parameters params)
+    {
+        // Pure logic with no dependencies
+        return result;
+    }
+}
+```
+
+## Error Handling Patterns
+
+### Pattern 1: Exception Throwing (for exceptional cases)
+```csharp
+public void ValidateAndProcess(Data data)
+{
+    if (data == null)
+        throw new ArgumentNullException(nameof(data));
+    
+    if (!IsValid(data))
+        throw new InvalidOperationException("Data validation failed");
+    
+    // Process
+}
+```
+
+### Pattern 2: Tuple Returns (for expected error cases)
+```csharp
+public (Result? result, string? error) TryProcess(Data data)
+{
+    if (!IsValid(data))
+        return (null, "Validation failed");
+    
+    try
+    {
+        var result = Process(data);
+        return (result, null);
+    }
+    catch (Exception ex)
+    {
+        return (null, $"Processing error: {ex.Message}");
+    }
+}
+```
+
+### Pattern 3: Result Object (for complex scenarios)
+```csharp
+public class OperationResult<T>
+{
+    public bool Success { get; init; }
+    public T? Data { get; init; }
+    public string? Error { get; init; }
+    public int StatusCode { get; init; }
+}
+
+public OperationResult<ProcessedData> Process(InputData input)
+{
+    // Implementation
+}
+```
+
+## Checklist
+- [ ] Interface defined with XML comments
+- [ ] Implementation class created
+- [ ] Dependencies injected via constructor
+- [ ] XML documentation on public methods
+- [ ] Error handling implemented
+- [ ] Private helper methods extracted
+- [ ] Service registered in Program.cs with correct lifetime
+- [ ] Unit tests created for service
