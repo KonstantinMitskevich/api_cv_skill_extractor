@@ -16,8 +16,6 @@ This directory contains custom instructions and reusable prompts for GitHub Copi
     ??? add-endpoint.prompt           # Template for new API endpoints
     ??? add-service.prompt            # Template for new services
     ??? add-tests.prompt              # Template for unit tests
-    ??? add-logging.prompt            # Error handling and logging guide
-    ??? add-configuration.prompt      # Configuration setup guide
 ```
 
 ## Repository-Wide Instructions
@@ -110,24 +108,6 @@ Template for generating unit tests with:
 - Parameterized tests
 
 **Usage:** `#add-tests Generate tests for SkillExtractorService`
-
-### add-logging.prompt
-Guide for adding logging and error handling:
-- ILogger injection
-- Logging levels
-- Structured logging
-- Exception handling patterns
-
-**Usage:** `#add-logging Add logging to SkillExtractorService`
-
-### add-configuration.prompt
-Guide for adding configuration settings:
-- Options pattern
-- Validation
-- Environment-specific config
-- IOptions injection
-
-**Usage:** `#add-configuration Add configuration for max file size and timeout`
 
 ## How to Use
 
