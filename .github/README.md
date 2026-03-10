@@ -1,181 +1,124 @@
-# GitHub Copilot Customization
+# CV Skills Extractor (.NET 9 Minimal API)
 
-This directory contains custom instructions and reusable prompts for GitHub Copilot to provide better, project-specific code suggestions.
+A modern .NET 9 Minimal API for extracting skills from PDF CV files using PdfPig. Designed for reliability, testability, and extensibility.
 
-## Structure
+## Features
+- Upload PDF CVs and extract unique skills
+- Robust PDF parsing with UglyToad.PdfPig
+- Section-based skill extraction using regex
+- Comprehensive error handling and logging
+- SOLID service architecture with dependency injection
+- Unit tests with xUnit and NSubstitute
+- Custom Copilot instructions and prompts for rapid development
+
+## Getting Started
+
+### Prerequisites
+- .NET 9 SDK
+- Visual Studio 2022+ or VS Code
+
+### Setup
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/KonstantinMitskevich/Skill_extractor.git
+   cd Skill_extractor
+   ```
+2. Restore dependencies:
+   ```sh
+   dotnet restore
+   ```
+3. Build the solution:
+   ```sh
+   dotnet build
+   ```
+4. Run the API:
+   ```sh
+   dotnet run --project CV_extractor
+   ```
+
+### API Usage
+
+#### Upload CV and Extract Skills
+- **Endpoint:** `POST /extract-skills`
+- **Request:** Multipart form with PDF file (`IFormFile`)
+- **Response:** JSON array of unique skills, error message, and status code
+
+#### Example Request (cURL)
+```sh
+curl -F "file=@your_cv.pdf" http://localhost:5000/extract-skills
+```
+
+#### Response
+```json
+{
+  "skills": ["C#", "Python", "JavaScript"],
+  "error": null,
+  "statusCode": 200
+}
+```
+
+## Project Structure
 
 ```
-.github/
-??? copilot-instructions.md          # Repository-wide instructions
-??? copilot-instructions/             # Path-specific instructions
-?   ??? Services.md                   # Service layer guidelines
-?   ??? Endpoints.md                  # API endpoint patterns
-?   ??? Configuration.md              # Configuration file rules
-?   ??? Testing.md                    # Testing standards
-??? copilot-prompts/                  # Reusable prompt templates
-    ??? add-endpoint.prompt           # Template for new API endpoints
-    ??? add-service.prompt            # Template for new services
-    ??? add-tests.prompt              # Template for unit tests
+Skill_extractor/
+??? CV_extractor/                # Main API project
+?   ??? Program.cs               # Minimal API endpoints
+?   ??? SkillExtractorService.cs # Skills extraction logic
+?   ??? appsettings.json         # Configuration
+?   ??? ...
+??? Skill.Extractor.L0.Tests/    # Unit tests (xUnit)
+?   ??? SkillExtractorServiceTests.cs
+??? .github/
+?   ??? copilot-instructions.md  # Global Copilot instructions
+?   ??? copilot-prompts/         # Custom Copilot prompt templates
+?   ??? ...
 ```
 
-## Repository-Wide Instructions
+## Skills Extraction Logic
+- Locates "SKILLS" section using regex: `(?i)skills\s*:?`
+- Extracts content until next section header (e.g., EXPERIENCE, EDUCATION)
+- Splits by newlines, commas, semicolons, bullets, hyphens
+- Returns unique, trimmed skills (case-insensitive)
 
-**File:** `copilot-instructions.md`
+## Error Handling
+- 400 Bad Request for invalid files (null, empty, not PDF)
+- 500 Internal Server Error for PDF parsing failures
+- 200 OK with empty array if SKILLS section not found
+- All exceptions logged (see service code)
 
-Applies to all files in the repository. Contains:
-- Project overview and architecture
-- General coding guidelines (SOLID, DI, naming conventions)
-- Error handling patterns
-- API design standards
-- PDF processing specifics
-- CORS configuration
-- Testing requirements
-- Code style preferences
-
-## Path-Specific Instructions
-
-These instructions apply to specific files or directories:
-
-### Services.md
-**Applies to:** `*Service.cs`, `Services/*.cs`
-
-Guidelines for:
-- Interface and implementation patterns
-- Service registration with DI
-- Error handling strategies
-- Method organization
-- Regex best practices
-- Performance considerations
-
-### Endpoints.md
-**Applies to:** `Program.cs` (endpoint definitions)
-
-Guidelines for:
-- Minimal API structure
-- File upload endpoints
-- Response patterns
-- OpenAPI documentation
-- CORS configuration
-- Request validation
-
-### Configuration.md
-**Applies to:** `appsettings*.json`, `launchSettings.json`
-
-Guidelines for:
-- Configuration file structure
-- Environment-specific settings
-- User secrets management
-- Launch profiles
-
-### Testing.md
-**Applies to:** `*Tests.cs`, `Tests/*.cs`, `*.Tests/*.cs`
-
-Guidelines for:
-- Test organization and naming
+## Testing
+- Unit tests in `Skill.Extractor.L0.Tests`
+- Mocked `IFormFile` for PDF input
+- Edge cases: empty PDFs, missing SKILLS, malformed files
 - Arrange-Act-Assert pattern
-- Mocking strategies
-- Test coverage requirements
-- Assertion best practices
+- Run tests:
+  ```sh
+  dotnet test Skill.Extractor.L0.Tests
+  ```
 
-## Reusable Prompts
+## Custom Copilot Instructions & Prompts
+- `.github/copilot-instructions.md`: Project-wide coding standards
+- `.github/copilot-prompts/`: Templates for services, endpoints, tests
+- Use in Copilot Chat: `#add-service`, `#add-tests`, `#add-endpoint`
 
-Prompt files provide templates for common tasks. Use them in Copilot Chat by referencing with `#`:
-
-### add-endpoint.prompt
-Template for creating new API endpoints with:
-- File upload handling
-- JSON request/response
-- Validation
-- OpenAPI documentation
-
-**Usage:** `#add-endpoint Create a POST /analyze endpoint that accepts a CSV file`
-
-### add-service.prompt
-Template for creating service classes with:
-- Interface definition
-- Dependency injection
-- Error handling patterns
-- Service registration
-
-**Usage:** `#add-service Create a CsvParserService for parsing CSV files`
-
-### add-tests.prompt
-Template for generating unit tests with:
-- Happy path scenarios
-- Edge cases
-- Error handling tests
-- Mock patterns
-- Parameterized tests
-
-**Usage:** `#add-tests Generate tests for SkillExtractorService`
-
-## How to Use
-
-### 1. Automatic Application
-GitHub Copilot automatically reads and applies:
-- `copilot-instructions.md` for all files
-- Path-specific instructions based on file location
-
-No action needed - just start coding!
-
-### 2. Using Prompt Files in Copilot Chat
-Reference prompts with `#` followed by the prompt name:
-
-```
-#add-service Create an EmailValidationService
-```
-
-or
-
-```
-#add-tests for the current file
-```
-
-### 3. Inline Suggestions
-When writing code, Copilot will suggest code that follows your custom instructions automatically.
-
-## Updating Instructions
-
-When project patterns evolve:
-
-1. **Update relevant instruction file** in `.github/copilot-instructions/`
-2. **Commit changes** to repository
-3. **Copilot will use new instructions** immediately
-
-## Best Practices
-
-### For Instructions
-- Keep concise and example-driven
-- Include anti-patterns to avoid
-- Update as project evolves
-- Document rationale for complex rules
-
-### For Prompts
-- Provide complete, working templates
-- Include checklists for verification
-- Show multiple patterns where applicable
-- Add comments explaining key decisions
-
-## Project-Specific Context
-
-This Copilot customization is tailored for:
-- **.NET 9** Minimal API
-- **C# 13.0** features
-- **PdfPig** for PDF processing
-- **xUnit** for testing
-- **SOLID principles** and clean architecture
-- **Skills extraction** from CV/resume PDFs
+## Extending the API
+- Add new services using `add-service.prompt`
+- Register services in `Program.cs` with DI
+- Follow SOLID and SRP for all new code
+- Add unit tests for new features
 
 ## Contributing
-
-When adding new patterns or features:
-1. Update relevant instruction files
-2. Create prompt templates for common tasks
-3. Include examples from actual codebase
-4. Document in this README
+1. Fork the repo and create a feature branch
+2. Follow instructions in `.github/copilot-instructions.md`
+3. Add/modify Copilot prompts as needed
+4. Write unit tests for all new code
+5. Submit a pull request
 
 ## Learn More
-
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
-- [Copilot Custom Instructions](https://github.blog/changelog/2024-05-21-copilot-instructions-in-github-copilot-chat/)
 - [.NET Coding Conventions](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
+- [PdfPig Library](https://github.com/UglyToad/PdfPig)
+
+---
+
+For questions or feature requests, open an issue or use Copilot Chat with custom prompts!
