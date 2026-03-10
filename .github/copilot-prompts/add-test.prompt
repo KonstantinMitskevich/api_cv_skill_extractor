@@ -12,6 +12,7 @@ Create comprehensive unit tests for the current class or service using xUnit.
 7. Include [Theory] with [InlineData] for parameterized tests where appropriate
 
 ## Test Class Template
+
 ```csharp
 using Xunit;
 using NSubstitute;
@@ -75,9 +76,11 @@ public class <ClassName>Tests
         return new InputType { Property = "value" };
     }
 }
+
 ```
 
 ## Testing SkillExtractorService Example
+
 ```csharp
 using Xunit;
 using Moq;
@@ -230,11 +233,13 @@ public class SkillExtractorServiceTests
         return mockFile.Object;
     }
 }
+
 ```
 
 ## Mock Patterns
 
 ### Mocking IFormFile
+
 ```csharp
 private static IFormFile CreateMockFile(string fileName, byte[] content)
 {
@@ -245,9 +250,11 @@ private static IFormFile CreateMockFile(string fileName, byte[] content)
     mock.Setup(f => f.OpenReadStream()).Returns(stream);
     return mock.Object;
 }
+
 ```
 
 ### Mocking Services
+
 ```csharp
 [Fact]
 public void Endpoint_ValidRequest_CallsService()
@@ -260,6 +267,7 @@ public void Endpoint_ValidRequest_CallsService()
     // Act & Assert
     mockService.Verify(s => s.ExtractSkills(It.IsAny<IFormFile>()), Times.Once);
 }
+
 ```
 
 ## Test Coverage Checklist

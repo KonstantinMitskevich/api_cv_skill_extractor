@@ -11,6 +11,13 @@ public interface ISkillExtractorService
 
 public class SkillExtractorService : ISkillExtractorService
 {
+    private readonly Func<IFormFile, string> _extractTextFromPdf;
+
+    public SkillExtractorService(Func<IFormFile, string>? extractTextFromPdf = null)
+    {
+        _extractTextFromPdf = extractTextFromPdf ?? ExtractTextFromPdf;
+    }
+
     public (List<string> skills, string? error, int statusCode) ExtractSkillsFromPdf(IFormFile file)
     {
         if (!IsValidPdfFile(file))
@@ -19,7 +26,7 @@ public class SkillExtractorService : ISkillExtractorService
         string extractedText;
         try
         {
-            extractedText = ExtractTextFromPdf(file);
+            extractedText = _extractTextFromPdf(file);
         }
         catch (Exception ex)
         {
