@@ -67,20 +67,8 @@ Skill_extractor/
 ?   ??? appsettings.json         # Configuration
 ?   ??? Properties/
 ?   ?   ??? launchSettings.json
-?   ??? obj/
-?       ??? Debug/
-?           ??? net9.0/
-?               ??? CV_extractor.AssemblyInfo.cs
-?               ??? CV_extractor.GlobalUsings.g.cs
-?               ??? .NETCoreApp,Version=v9.0.AssemblyAttributes.cs
 ??? Skill.Extractor.L0.Tests/    # Unit tests (xUnit)
 ?   ??? SkillExtractorServiceTests.cs
-?   ??? obj/
-?       ??? Debug/
-?           ??? net9.0/
-?               ??? Skill.Extractor.L0.Tests.AssemblyInfo.cs
-?               ??? Skill.Extractor.L0.Tests.GlobalUsings.g.cs
-?               ??? .NETCoreApp,Version=v9.0.AssemblyAttributes.cs
 ??? .github/
 ?   ??? copilot-instructions.md  # Global Copilot instructions
 ?   ??? README.md
