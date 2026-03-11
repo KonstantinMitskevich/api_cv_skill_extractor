@@ -31,31 +31,31 @@ The CV Skills Extractor API accepts a PDF CV file uploaded via a multipart form 
 
 ```
 Skill_extractor/
-??? .github/
-?   ??? copilot-instructions.md          # GitHub Copilot workspace-wide coding standards
-?   ??? copilot-instructions/
-?   ?   ??? Configuration.md             # Configuration guidelines
-?   ?   ??? Endpoints.md                 # Endpoint design guidelines
-?   ?   ??? Services.md                  # Service layer guidelines
-?   ?   ??? Testing.md                   # Testing guidelines
-?   ??? copilot-prompts/
-?       ??? add-configuration.prompt     # Prompt template for adding configuration
-?       ??? add-endpoint.prompt          # Prompt template for adding endpoints
-?       ??? add-logging.prompt           # Prompt template for adding logging
-?       ??? add-service.prompt           # Prompt template for adding services
-?       ??? add-test.prompt              # Prompt template for adding tests
-??? CV_extractor/                        # Main API project (.NET 9 Minimal API)
-?   ??? Properties/
-?   ?   ??? launchSettings.json          # Launch profiles (HTTP / HTTPS / OpenAPI)
-?   ??? appsettings.json                 # Application configuration
-?   ??? appsettings.Development.json     # Development-specific overrides
-?   ??? CV_extractor.csproj              # Project file
-?   ??? Program.cs                       # Entry point – DI registration, middleware, endpoints
-?   ??? SkillExtractorService.cs         # PDF parsing and skills extraction logic
-??? Skill.Extractor.L0.Tests/            # Unit test project (xUnit + NSubstitute)
-?   ??? SkillExtractorServiceTests.cs    # Unit tests for SkillExtractorService
-?   ??? Skill.Extractor.L0.Tests.csproj # Test project file
-??? README.md
++-- .github/
+¦   +-- copilot-instructions.md          # GitHub Copilot workspace-wide coding standards
+¦   +-- copilot-instructions/
+¦   ¦   +-- Configuration.md             # Configuration guidelines
+¦   ¦   +-- Endpoints.md                 # Endpoint design guidelines
+¦   ¦   +-- Services.md                  # Service layer guidelines
+¦   ¦   L-- Testing.md                   # Testing guidelines
+¦   L-- copilot-prompts/
+¦       +-- add-configuration.prompt     # Prompt template for adding configuration
+¦       +-- add-endpoint.prompt          # Prompt template for adding endpoints
+¦       +-- add-logging.prompt           # Prompt template for adding logging
+¦       +-- add-service.prompt           # Prompt template for adding services
+¦       L-- add-test.prompt              # Prompt template for adding tests
++-- CV_extractor/                        # Main API project (.NET 9 Minimal API)
+¦   +-- Properties/
+¦   ¦   L-- launchSettings.json          # Launch profiles (HTTP / HTTPS / OpenAPI)
+¦   +-- appsettings.json                 # Application configuration
+¦   +-- appsettings.Development.json     # Development-specific overrides
+¦   +-- CV_extractor.csproj              # Project file
+¦   +-- Program.cs                       # Entry point – DI registration, middleware, endpoints
+¦   L-- SkillExtractorService.cs         # PDF parsing and skills extraction logic
++-- Skill.Extractor.L0.Tests/            # Unit test project (xUnit + NSubstitute)
+¦   +-- SkillExtractorServiceTests.cs    # Unit tests for SkillExtractorService
+¦   L-- Skill.Extractor.L0.Tests.csproj # Test project file
+L-- README.md
 ```
 
 ---
